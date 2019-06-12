@@ -22,13 +22,13 @@ typedef struct thread_data { //Структура данных для хране
 } thread_data;
 
 void *rectangle(void *threadD);
-double f( double );              // Интегрируемая функция
+double f( double ); // Интегрируемая функция
 double dabs( double ); // Абсолютная величина для вещественных чисел
 
 int main(int argc, char const *argv[])
 {
     
-    const double REAL  = 1.7641627815248437;// Точное значение интеграла
+    const double REAL  = 1.7641627815248437;    // Точное значение интеграла
     unsigned int NUM_THREADS = 2; // Количество потоков.
     const double a = -2.0; // Левая граница интервала интегрирования.
     const double b =  2.0; // Правая граница интервала интегрирования.
@@ -36,18 +36,18 @@ int main(int argc, char const *argv[])
     clock_t     t2;      // Время окончания вычислений.
     double secs; // Время вычислений в секундах.
     
-    int i;//Счетчик цикла
-    double Ivalue, //Значение интеграла
-    y_total = 0.0;//Сумма от всех потоков
-    static long num_steps;// количество интервалов разбиения отрезка интегрирования
+    int i;  //Счетчик цикла
+    double Ivalue,  //Значение интеграла
+    y_total = 0.0;  //Сумма от всех потоков
+    static long num_steps;  // количество интервалов разбиения отрезка интегрирования
     double thread_interval;
-    double step;//Шаг интегрирования
-    if(argc == 3) {//Если вызов с двумя параметрами, то читаем их
+    double step;    //Шаг интегрирования
+    if(argc == 3) { //Если вызов с двумя параметрами, то читаем их
         num_steps = atoi(argv[1]);
         NUM_THREADS=atoi(argv[2]);
     }
-    else {//Иначе значения по умолчанию
-        num_steps = 1000000;
+    else {  //Иначе значения по умолчанию
+        num_steps = 10000000;
         NUM_THREADS=2;
     }
     //Расчет шага интегрирования
@@ -89,8 +89,8 @@ int main(int argc, char const *argv[])
     //Удаление мьютекса
     pthread_mutex_destroy(&y_total_lock);
     // Вывод результатов
-    printf( "Расчетное значение: интеграл exp(-x*x ) от %.2f до %.2f: %.15lf\n", a, b, Ivalue );
-    printf( "Точное значение: интеграл    exp(-x*x ) от  %.2f до %.2f: %.15lf\n", a, b, REAL );
+    printf( "Расчетное значение: интеграл от %.2f до %.2f: %.15lf\n", a, b, Ivalue );
+    printf( "Точное значение: интеграл от  %.2f до %.2f: %.15lf\n", a, b, REAL );
     printf( "Абсолютная погрешность: %.15lf\n", dabs( REAL - Ivalue ));
     printf( "Относительная погрешность: %.15lf\n", 100*dabs( REAL - Ivalue ) / dabs( REAL ) );
     printf( "Использовано %ld шагов %d потоков.\n", num_steps, NUM_THREADS );
@@ -100,9 +100,11 @@ int main(int argc, char const *argv[])
     return 0;
 }
 
-// Интегрируемая функция.
+// Интегрируемая функция
+// Вариант 0 - http://eclass.cmc.msu.ru/user/profile.php?id=140
+
 inline double f( double x ) {
-    return exp(-x*x);
+    return 1 / sqrt(1+pow(x, 4));
 }
 
 // Абсолютная величина.
@@ -111,14 +113,14 @@ inline double dabs( double x ) {
     else {return x;}
 }
 
-//Метод прямоугольников
+// Метод правых прямоугольников
 void *rectangle(void *threadD)
 {
     double x, y_partial = 0;
     //Читаем входные данные
     thread_data * tData = (thread_data*)threadD;
     //Вычисляем сумму значений интегрируемой функции
-    for(x = tData->start; x < tData->end-tData->step; x=x+tData->step) {
+    for(x = tData->start+tData->step; x < tData->end; x=x+tData->step) {
         y_partial += f(x);
     }
     //Критическая секция Запись в глобальную переменную
